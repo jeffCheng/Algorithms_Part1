@@ -8,7 +8,7 @@ public class FastCollinearPoints {
 	public FastCollinearPoints(Point[] points) {
 		if (points == null)
 			throw new IllegalArgumentException();
-		
+
 		for (Point p : points)
 			if (p == null)
 				throw new IllegalArgumentException();
@@ -26,35 +26,20 @@ public class FastCollinearPoints {
 		Point[] pointSet = points.clone();
 		Arrays.sort(pointSet);
 
-		for (int i = 0; i < pointsNums; i++) {
+		for (int i = 0; i < pointSet.length - 3; i++) {
+			Arrays.sort(pointSet);
+			// order by slope
+			Arrays.sort(pointSet, pointSet[i].slopeOrder());
 
-			Point[] ps = pointSet.clone();
-			Arrays.sort(ps, ps[i].slopeOrder());
-
-			final Point anchor = ps[0];
-			double slopeSlow = anchor.slopeTo(ps[1]);
-			double slopeFast;
-			int idxSlow = 1;
-			int idxFast =0;
-			while (idxSlow < pointsNums - 2) {
-				idxFast = idxSlow + 1;
-				do {
-					slopeFast = anchor.slopeTo(ps[idxFast++]);
-				} while (slopeSlow == slopeFast && idxFast < pointsNums);
-				int numOfAdjacentPoint = idxFast - idxSlow;
-				if (numOfAdjacentPoint >= 3) {
-					// sort the array as previous sort is unstable
-					Point[] segment = new Point[numOfAdjacentPoint + 1];
-					segment[0] = anchor;
-					System.arraycopy(ps, idxSlow, segment, 1, numOfAdjacentPoint);
-					Arrays.sort(segment);
-					// make sure no duplicate subsegment
-					if (segment[0] == anchor) {
-						lineSegments.add(new LineSegment(anchor, segment[numOfAdjacentPoint]));
-					}
+			for (int a = 0, slow = 1, fast = 2; fast < pointSet.length; fast++) {
+				while (fast < pointSet.length && Double.compare(pointSet[a].slopeTo(pointSet[slow]),
+				        pointSet[a].slopeTo(pointSet[fast])) == 0) {
+					fast++;
 				}
-				slopeSlow = slopeFast;
-				idxSlow = idxFast;
+				if (fast - slow >= 3 && pointSet[a].compareTo(pointSet[slow]) < 0) {
+					lineSegments.add(new LineSegment(pointSet[a], pointSet[fast - 1]));
+				}
+				slow = fast;
 			}
 		}
 
